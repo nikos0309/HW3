@@ -1,0 +1,30 @@
+services:
+  app:
+    build: .
+    ports:
+      - "${INPUT_PORT}:8000"
+    environment:
+      GREETING: "${INPUT_GREETING}"
+      STORAGE: redis
+      REDIS_URL: "redis://redis:6379/0"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/readyz', timeout=2)"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 3s
+
+  redis:
+    image: redis:7.4-alpine
+    volumes:
+      - storage:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 3s
+
+volumes:
+  storage:
